@@ -1,12 +1,23 @@
 <template>
-  <div class="home">this is home page</div>
+  <div class="home">
+    <map-view></map-view>
+  </div>
 </template>
 
 <script lang="ts">
-import { Options, Vue } from "vue-class-component";
+import { defineComponent } from "vue";
+import MapView from "@/components/MapView.vue";
 
-@Options({
-  components: {},
-})
-export default class Home extends Vue {}
+export default defineComponent({
+  components: {
+    MapView,
+  },
+});
 </script>
+
+<style lang="less" scoped>
+.home {
+  width: 100vw;
+  height: 100vh;
+}
+</style>
