@@ -3,9 +3,7 @@
 </template>
 
 <script lang="ts">
-import "ol/ol.css";
 import { Map, View } from "ol";
-import { defaults as defaultControls } from "ol/control";
 import Tile from "ol/layer/Tile";
 import { fromLonLat } from "ol/proj";
 import OSM from "ol/source/OSM";
@@ -13,8 +11,7 @@ import { defineComponent } from "vue";
 
 export default defineComponent({
   data() {
-    return {
-    };
+    return {};
   },
   mounted() {
     this.initMap();
@@ -45,6 +42,7 @@ export default defineComponent({
 </script>
 
 <style scoped>
+@import "~ol/ol.css";
 #mapDiv {
   width: 100%;
   height: 100%;

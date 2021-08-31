@@ -1,5 +1,22 @@
 <template>
   <div class="about">
-    <h1>This is an about page</h1>
+    <map-ctt></map-ctt>
   </div>
 </template>
+<script lang="ts">
+import { defineComponent } from "vue";
+import MapCtt from "@/components/MapCtt.vue";
+
+export default defineComponent({
+  components: {
+    MapCtt,
+  },
+});
+</script>
+
+<style lang="less" scoped>
+.about {
+  width: 100vw;
+  height: 100vh;
+}
+</style>
