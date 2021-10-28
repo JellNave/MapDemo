@@ -19,9 +19,7 @@ const component = defineComponent({
   setup() {
     let map: any = null;
     let layer: any = null;
-    let max: any = null;
     let tileLayer = new TileLayer();
-    let source = new OSM();
     /**
      * 初始化一个 openlayers 地图
      */
@@ -46,10 +44,9 @@ const component = defineComponent({
       //     }),
       //   }),
       // ];
-      tileLayer.setSource(source);
       let view = new View({
         center: fromLonLat([105.444493, 28.875237]), //地图中心坐标
-        zoom: 12, //缩放级别
+        zoom: 11, //缩放级别
       });
       map = new Map({
         target: target, //绑定dom元素进行渲染
@@ -149,7 +146,10 @@ const component = defineComponent({
       addArea([areaGeo]); //添加geojson的边界描边和填充
       addHeatMap(); //添加热力图数据
     });
-    return {};
+    return {
+      layer,
+      tileLayer,
+    };
   },
 });
 //导出
@@ -159,23 +159,58 @@ export function useIndexMap() {
   // 地图控制
   const mapComponent = ref<InstanceType<typeof component>>();
   //选中状态
-  const checked1 = ref<boolean>();
-  const checked2 = ref<boolean>();
-  const checked3 = ref<boolean>();
-  const checked4 = ref<boolean>();
-  const checked5 = ref<boolean>();
-  const checked6 = ref<boolean>();
-
+  const checkedSource = ref<string>();
+  watch(
+    //监听选中状态调用方法加载打点
+    checkedSource,
+    (values) => {
+      switch (values) {
+        case "OSMOO":
+          mapComponent.value!.tileLayer.setSource(new OSM());
+          break;
+        case "XYZAC":
+          mapComponent.value!.tileLayer.setSource(
+            new XYZ({
+              url: "http://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineStreetPurplishBlue/MapServer/tile/{z}/{y}/{x}",
+            })
+          );
+          break;
+        case "XYZTO":
+          mapComponent.value!.tileLayer.setSource(
+            new XYZ({
+              url: "https://tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=134b8b7227e74640bfaa05398ab99200",
+            })
+          );
+          break;
+        case "XYZTT":
+          mapComponent.value!.tileLayer.setSource(
+            new XYZ({
+              url: "https://tile.thunderforest.com/transport/{z}/{x}/{y}.png?apikey=134b8b7227e74640bfaa05398ab99200",
+            })
+          );
+          break;
+        case "XYZTS":
+          mapComponent.value!.tileLayer.setSource(
+            new XYZ({
+              url: "https://tile.thunderforest.com/spinal-map/{z}/{x}/{y}.png?apikey=134b8b7227e74640bfaa05398ab99200",
+            })
+          );
+          break;
+        case "STAOW":
+          mapComponent.value!.tileLayer.setSource(
+            new Stamen({
+              layer: "watercolor",
+            })
+          );
+          break;
+      }
+    }
+  );
   onMounted(() => {
-    console.log(checked1.value);
+    checkedSource.value = "OSMOO";
   });
   return {
     mapComponent,
-    checked1,
-    checked2,
-    checked3,
-    checked4,
-    checked5,
-    checked6,
+    checkedSource,
   };
 }
