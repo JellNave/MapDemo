@@ -208,6 +208,12 @@ export function useIndexMap() {
             })
           );
           break;
+        case "XYZAI":
+          mapComponent.value!.tileLayer.setSource(
+            new XYZ({
+              url: "http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+            })
+          );
       }
     }
   );

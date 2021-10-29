@@ -94,6 +94,14 @@ export default defineComponent({
         }),
         value: "STAOW",
       },
+      {
+        id: "sourceRadio7",
+        title: "XYZ-arcgis-imageOfWorld",
+        source: new XYZ({
+          url: "http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        }),
+        value: "XYZAI",
+      },
     ];
     return {
       sourceList,
