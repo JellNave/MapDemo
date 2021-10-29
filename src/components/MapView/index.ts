@@ -11,39 +11,24 @@ import { Polygon, Point, MultiPolygon } from "ol/geom";
 import { defaults as defaultControls } from "ol/control";
 import Stamen from "ol/source/Stamen";
 import areaGeo from "@/geojson/luzhou.json";
-import pointData from "@/geojson/test.json";
+import pointData from "@/geojson/heatdata.json";
 import XYZ from "ol/source/XYZ";
 
 const component = defineComponent({
   /* eslint-disable*/
   setup() {
+    //图层定义
     let map: any = null;
     let layer: any = null;
+    let heatLayer: any = null;
     let tileLayer = new TileLayer();
+    let areaLayer: any = null;
     /**
      * 初始化一个 openlayers 地图
      */
     const initMap = () => {
       let target = "mapDiv"; //跟页面元素的 id 绑定来进行渲染
-      layer = [
-        tileLayer,
-        // new TileLayer({
-        // source: new OSM(),
-        // source: new XYZ({
-        //   url: "http://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineStreetPurplishBlue/MapServer/tile/{z}/{y}/{x}",
-        // }),
-        // source: new XYZ({
-        // url: "https://tile.thunderforest.com/transport/{z}/{x}/{y}.png?apikey=134b8b7227e74640bfaa05398ab99200",
-        // }),
-        // }),
-      ];
-      // layer = [
-      //   new TileLayer({
-      //     source: new Stamen({
-      //       layer: "watercolor",
-      //     }),
-      //   }),
-      // ];
+      layer = [tileLayer];
       let view = new View({
         center: fromLonLat([105.444493, 28.875237]), //地图中心坐标
         zoom: 11, //缩放级别
@@ -57,8 +42,12 @@ const component = defineComponent({
         }).extend([]),
       });
     };
-    const addArea = (geo: any) => {
+    /**
+     * 定义行政区划图层
+     */
+    const declareArea = (geo: any) => {
       let features: any[] = [];
+      //遍历geojson添加要素
       geo.forEach((ele: any) => {
         ele.features.forEach((g: any) => {
           let lineData: any = g;
@@ -91,67 +80,81 @@ const component = defineComponent({
           features.push(routeFeature);
         });
       });
-
-      [...geo][0].features.forEach((g: any) => {});
-      // 设置图层
-      let routeLayer = new VectorLayer({
+      // 配置图层
+      areaLayer = new VectorLayer({
         source: new VectorSource({
           features: features,
         }),
+        zIndex: 999,
       });
-      // 添加图层
-      map.addLayer(routeLayer);
     };
     /**
-     * 添加热力图
+     * 定义热力图层
      */
-    const addHeatMap = () => {
+    const declareHeatMap = (heatData: any) => {
+      //热力图配置
       let colors = ["#2200FF", "#16D9CC", "#4DEE12", "#E8D225", "#EF1616"];
       let zoomLevel = map.getView().getZoom();
       let radius = Math.pow(2, zoomLevel) * 0.002;
       let opacity = 1 - (zoomLevel * 2) / 100;
-      layer = new HeatmapLayer({
+      heatLayer = new HeatmapLayer({
         source: new VectorSource(),
         blur: 30,
         radius: radius,
         gradient: colors,
         opacity: opacity,
+        zIndex: 9999,
       });
-      map.addLayer(layer);
-      AppendFeatures(pointData.obj.deviceheat, colors);
-      map.on("moveend", () => {
-        var zoom = map.getView().getZoom(); //获取当前地图的缩放级别
-        layer.setRadius(Math.pow(2, zoom) * 0.002);
-        layer.setOpacity(1 - (zoom * 2) / 100);
-      });
-    };
-    /**
-     * 增加要素至热力图
-     */
-    const AppendFeatures = (hatmapData: any, colors: any) => {
-      for (var i in hatmapData) {
-        var f = new Feature({
+      //添加要素至热力图层
+      for (var i in heatData) {
+        const heatFeatures = new Feature({
           geometry: new Point(
             fromLonLat([
-              Number(hatmapData[i].longitude),
-              Number(hatmapData[i].latitude),
+              Number(heatData[i].longitude),
+              Number(heatData[i].latitude),
             ])
           ),
         });
-        layer.getSource().addFeature(f);
+        heatLayer.getSource().addFeature(heatFeatures);
       }
+      //绑定监听事件动态控制热力图视效
+      map.on("moveend", () => {
+        var zoom = map.getView().getZoom(); //获取当前地图的缩放级别
+        heatLayer.setRadius(Math.pow(2, zoom) * 0.002);
+        heatLayer.setOpacity(1 - (zoom * 2) / 100);
+      });
+    };
+    //添加热力图层
+    const addHeatLayer = () => {
+      map.addLayer(heatLayer);
+    };
+    //删除热力图层
+    const removeHeatLayer = () => {
+      map.removeLayer(heatLayer);
+    };
+    //添加区划图层
+    const addAreaLayer = () => {
+      map.addLayer(areaLayer);
+    };
+    //删除区划图层
+    const removeAreaLayer = () => {
+      map.removeLayer(areaLayer);
     };
     onMounted(() => {
       initMap(); //初始化地图
-      addArea([areaGeo]); //添加geojson的边界描边和填充
-      addHeatMap(); //添加热力图数据
+      declareHeatMap(pointData.obj.deviceheat); //定义热力图层
+      declareArea([areaGeo]); //添加geojson的边界描边和填充
     });
     return {
-      layer,
       tileLayer,
+      addHeatLayer,
+      removeHeatLayer,
+      addAreaLayer,
+      removeAreaLayer,
     };
   },
 });
+
 //导出
 export default component;
 
@@ -160,11 +163,13 @@ export function useIndexMap() {
   const mapComponent = ref<InstanceType<typeof component>>();
   //选中状态
   const checkedSource = ref<string>();
+  const checkedHeatmap = ref<boolean>();
+  const checkedArea = ref<boolean>();
   watch(
-    //监听选中状态调用方法加载打点
+    //监听选中状态调用方法加载地图底图资源
     checkedSource,
-    (values) => {
-      switch (values) {
+    (value) => {
+      switch (value) {
         case "OSMOO":
           mapComponent.value!.tileLayer.setSource(new OSM());
           break;
@@ -206,11 +211,37 @@ export function useIndexMap() {
       }
     }
   );
+  watch(checkedArea, (value) => {
+    // 监听选中状态控制区划图层显示
+    switch (value) {
+      case true:
+        mapComponent.value!.addAreaLayer();
+        break;
+      case false:
+        mapComponent.value!.removeAreaLayer();
+        break;
+    }
+  });
+  watch(checkedHeatmap, (value) => {
+    // 监听选中状态控制热力图层显示
+    switch (value) {
+      case true:
+        mapComponent.value!.addHeatLayer();
+        break;
+      case false:
+        mapComponent.value!.removeHeatLayer();
+        break;
+    }
+  });
   onMounted(() => {
-    checkedSource.value = "OSMOO";
+    checkedSource.value = "OSMOO"; //默认底图为OSMOO
+    checkedArea.value = true; //默认显示热力图
+    checkedHeatmap.value = true; //默认显示区划
   });
   return {
     mapComponent,
     checkedSource,
+    checkedHeatmap,
+    checkedArea,
   };
 }

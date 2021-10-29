@@ -1,6 +1,8 @@
 <template>
   <div class="home">
+    <!-- 地图组件 -->
     <map-view ref="mapComponent"></map-view>
+    <!-- 地图资源切换单选组 -->
     <div class="radio-group">
       <div v-for="item in sourceList" :key="item.id">
         <input
@@ -11,6 +13,20 @@
           :value="item.value"
         />
         <label :for="item.id"> {{ item.title }} </label>
+      </div>
+    </div>
+    <!-- 热力图控制复选 -->
+    <div class="heatmap-checkbox">
+      <div>
+        <input type="checkbox" id="heatmap" v-model="checkedHeatmap" />
+        <label for="heatmap">Show Heatmap of Vistors Flow Fate</label>
+      </div>
+    </div>
+    <!-- 区划控制复选 -->
+    <div class="area-checkbox">
+      <div>
+        <input type="checkbox" id="area" v-model="checkedArea" />
+        <label for="area">Show Administrative Fivisions </label>
       </div>
     </div>
   </div>
@@ -27,7 +43,10 @@ export default defineComponent({
     MapView,
   },
   setup() {
-    const { mapComponent, checkedSource } = useIndexMap();
+    //组合式api引入对应变量
+    const { mapComponent, checkedSource, checkedHeatmap, checkedArea } =
+      useIndexMap();
+    //地图底图资源列表
     const sourceList = [
       {
         id: "sourceRadio1",
@@ -47,7 +66,7 @@ export default defineComponent({
         id: "sourceRadio3",
         title: "XYZ-thunderforest-openCycle",
         source: new XYZ({
-          url: "https://tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=134b8b7227e74640bfaa05398ab99200",
+          url: "https://tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=134b8b7227e74640bfaa05398ab99200", //自己注册的thunderforest apikey
         }),
         value: "XYZTO",
       },
@@ -80,6 +99,8 @@ export default defineComponent({
       sourceList,
       checkedSource,
       mapComponent,
+      checkedArea,
+      checkedHeatmap,
     };
   },
 });
@@ -89,13 +110,9 @@ export default defineComponent({
 .home {
   width: 100vw;
   height: 100vh;
+  user-select: none;
 }
-.radio-group {
-  position: fixed;
-  // top: ~"calc(50% - 125.5px)";
-  bottom: 0.5em;
-  left: 0.5em;
-  padding: 2px;
+.btn-style () {
   div {
     margin: 1px;
     height: 40px;
@@ -108,7 +125,7 @@ export default defineComponent({
       background-color: rgba(0, 60, 136, 0.7);
     }
     label {
-      width: 300px;
+      cursor: pointer;
       height: 40px;
       line-height: 40px;
       display: block;
@@ -116,6 +133,36 @@ export default defineComponent({
       background-color: rgba(0, 60, 136, 0.5);
       color: #fff;
     }
+  }
+}
+.radio-group {
+  position: fixed;
+  bottom: 0.5em;
+  left: 0.5em;
+  padding: 2px;
+  .btn-style();
+  label {
+    width: 300px;
+  }
+}
+.heatmap-checkbox {
+  position: fixed;
+  left: 0.5em;
+  top: 7em;
+  padding: 2px;
+  .btn-style();
+  label {
+    width: 300px;
+  }
+}
+.area-checkbox {
+  position: fixed;
+  left: 0.5em;
+  top: 10em;
+  padding: 2px;
+  .btn-style();
+  label {
+    width: 300px;
   }
 }
 </style>
