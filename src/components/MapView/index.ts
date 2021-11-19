@@ -14,6 +14,47 @@ import areaGeo from "@/geojson/luzhou.json";
 import pointData from "@/geojson/heatdata.json";
 import XYZ from "ol/source/XYZ";
 
+interface IGeoJson {
+  type: string;
+  features: {
+    type: string;
+    properties: {
+      adcode: number;
+      name: string;
+      center: number[];
+      centroid: number[];
+      childrenNum: number;
+      level: string;
+      parent: { adcode: number };
+      subFeatureIndex: number;
+      acroutes: number[];
+    };
+    geometry: {
+      type: string;
+      coordinates: number[][][][];
+    };
+    color: string;
+  }[];
+}
+interface IHeatData {
+  success: boolean;
+  obj: {
+    thermograph: {
+      geohash: string;
+      cnt: number;
+      longitude: number;
+      latitude: number;
+    }[];
+    deviceheat: {
+      deviceid: string;
+      longitude: string;
+      latitude: string;
+      total: string;
+    }[];
+  };
+  code: number;
+}
+
 const component = defineComponent({
   /* eslint-disable*/
   setup() {
@@ -114,6 +155,7 @@ const component = defineComponent({
               Number(heatData[i].latitude),
             ])
           ),
+          weight: heatData[i].total,
         });
         heatLayer.getSource().addFeature(heatFeatures);
       }
@@ -142,8 +184,8 @@ const component = defineComponent({
     };
     onMounted(() => {
       initMap(); //初始化地图
-      declareHeatMap(pointData.obj.deviceheat); //定义热力图层
-      declareArea([areaGeo]); //添加geojson的边界描边和填充
+      declareHeatMap((pointData as IHeatData).obj.deviceheat); //定义热力图层
+      declareArea([areaGeo as IGeoJson]); //添加geojson的边界描边和填充
     });
     return {
       tileLayer,
