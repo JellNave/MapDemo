@@ -292,4 +292,5 @@ export function useIndexMap() {
     checkedHeatmap,
     checkedArea,
   };
+  //test
 }
